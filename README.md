@@ -76,9 +76,10 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
 
 ## Known limitations
 
-- JSearch's free tier has a monthly request quota; this app uses 4 requests/day
-  (one per job title) ≈ 120/month, which fits comfortably, but if you add more
-  titles or `num_pages`, watch your quota.
+- JSearch's free tier has a monthly request quota; this app uses 8 requests/day
+  (a general pass + a Toronto-anchored pass per job title) ≈ 240/month —
+  check your plan's monthly limit, and if you add more titles or `num_pages`,
+  watch your quota.
 - "Hybrid" detection is a heuristic (keyword match in the job description),
   since the API doesn't expose a clean remote/hybrid/onsite field.
 - The Discarded tab only shows jobs still present in the current 7-day fetch
