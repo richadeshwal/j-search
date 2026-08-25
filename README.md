@@ -5,7 +5,7 @@ and **PM for AI** openings from LinkedIn, Indeed, Glassdoor, and ZipRecruiter
 (via the [JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) API,
 which aggregates Google for Jobs).
 
-- Refreshes automatically every day at **3:00 PM ET and 4:00 PM ET** via Vercel Cron.
+- Refreshes automatically every day at **3:00 PM ET** via Vercel Cron.
 - Only keeps jobs posted in the **last 7 days**.
 - Only keeps jobs that are **remote**, or **located in the Greater Toronto Area**
   (JSearch has no reliable "hybrid" flag, so any GTA-located result is kept —
@@ -38,10 +38,9 @@ which aggregates Google for Jobs).
      automatically sends this as a bearer token when it invokes the cron job,
      and the fetch route rejects requests without it.
 
-5. **Deploy.** The cron schedule is already defined in `vercel.json` — four
-   entries total (two per run time) so the fetch fires at both 3:00 PM and
-   4:00 PM Eastern year-round, accounting for the DST switch between
-   EST/EDT (Vercel Cron itself only understands UTC, hence the pairs).
+5. **Deploy.** The cron schedule is already defined in `vercel.json` (two
+   entries so the job fires at 3:00 PM Eastern year-round, accounting for the
+   DST switch between EST/EDT — Vercel Cron itself only understands UTC).
 
 6. **Trigger the first fetch manually** rather than waiting for 3 PM: visit
    `https://<your-deployment>/api/cron/fetch-jobs` with the `Authorization:
@@ -77,11 +76,15 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
 
 ## Known limitations
 
-- JSearch's free tier has a monthly request quota; this app now runs twice
-  daily (3 PM and 4 PM ET), 8 requests per run (a general pass + a
-  Toronto-anchored pass per job title) ≈ 480/month — check your Basic plan's
-  monthly limit, and if you add more titles, run times, or `num_pages`,
-  watch your quota.
+- JSearch's free "Basic" plan on RapidAPI is hard-capped at **200
+  requests/month**. This app runs 8 requests per fetch (a general pass + a
+  Toronto-anchored pass, per job title, × 4 titles), once daily at 3 PM ET
+  ≈ 240/month — still over the free cap on its own, before counting any
+  manual test triggers. Once the monthly quota is hit, fetches silently
+  return zero jobs (no crash, no alert) until it resets. To stay safely
+  under 200/month, either upgrade to a paid JSearch tier, or drop to a
+  single (non-Toronto-anchored) query per title — 4 requests/day ≈
+  120/month — accepting weaker GTA-specific coverage in exchange.
 - "Hybrid" detection is a heuristic (keyword match in the job description),
   since the API doesn't expose a clean remote/hybrid/onsite field.
 - The Discarded tab only shows jobs still present in the current 7-day fetch
