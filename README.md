@@ -63,10 +63,17 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
 
 ## How the filtering works (`lib/jsearch.js`)
 
-- Searches JSearch once per job title with `date_posted=week`.
+- Searches JSearch once per job title (4 requests total/day), each query
+  anchored to `"<title> jobs in Toronto, Ontario, Canada"`, with
+  `date_posted=week`. (An earlier version also ran an unanchored `"<title>
+  jobs"` pass to catch remote postings, but a real run showed it qualifying
+  only 2/40 results — not worth doubling the JSearch request budget for.)
 - A result **qualifies** if `job_is_remote` is true, or its location matches
   a Greater Toronto Area city list (Toronto, Mississauga, Brampton, Markham,
-  Vaughan, Etobicoke, Scarborough, North York, etc.).
+  Vaughan, Etobicoke, Scarborough, North York, etc.) — in practice, since
+  every query is now Toronto-anchored, results skew almost entirely GTA;
+  remote-but-not-Toronto jobs only show up if one incidentally surfaces from
+  that search.
 - **Score** (used to sort the New Jobs tab): +2 remote, +2 salary ≥ $160,000/yr
   (hourly/monthly/weekly pay is annualized for comparison), +1 GTA job whose
   description mentions "hybrid".
@@ -77,14 +84,9 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
 ## Known limitations
 
 - JSearch's free "Basic" plan on RapidAPI is hard-capped at **200
-  requests/month**. This app runs 8 requests per fetch (a general pass + a
-  Toronto-anchored pass, per job title, × 4 titles), once daily at 3 PM ET
-  ≈ 240/month — still over the free cap on its own, before counting any
-  manual test triggers. Once the monthly quota is hit, fetches silently
-  return zero jobs (no crash, no alert) until it resets. To stay safely
-  under 200/month, either upgrade to a paid JSearch tier, or drop to a
-  single (non-Toronto-anchored) query per title — 4 requests/day ≈
-  120/month — accepting weaker GTA-specific coverage in exchange.
+  requests/month**. This app runs 4 requests/day (one per job title), once
+  daily at 3 PM ET, ≈ 120/month — safely under the cap with room for
+  manual test triggers.
 - "Hybrid" detection is a heuristic (keyword match in the job description),
   since the API doesn't expose a clean remote/hybrid/onsite field.
 - The Discarded tab only shows jobs still present in the current 7-day fetch
