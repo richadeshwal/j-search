@@ -1,9 +1,11 @@
 # J-Search
 
 Tracks new **AI Product Manager**, **AI Project Manager**, **ML Product Manager**,
-and **PM for AI** openings from LinkedIn, Indeed, Glassdoor, and ZipRecruiter
-(via the [JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) API,
-which aggregates Google for Jobs).
+and **PM for AI** openings from two sources: the
+[JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) API (which
+aggregates LinkedIn, Indeed, Glassdoor, ZipRecruiter, and more via Google for
+Jobs), and your own Gmail — parsing LinkedIn's job-alert emails from the last
+48 hours directly.
 
 - Refreshes automatically every day at **3:00 AM ET** via Vercel Cron.
 - Only keeps jobs posted in the **last 7 days**.
@@ -17,6 +19,10 @@ which aggregates Google for Jobs).
   so it never comes back even after the next day's refresh, on any device.
 - **Mark applied** moves a job to the Applied tab and snapshots it, so it
   stays in your applied history even after it ages out of the 7-day window.
+- Also scans your Gmail for **LinkedIn job-alert emails from the last 48
+  hours** and folds any matching jobs into the same list. If that step
+  fails (expired token, Gmail API error, etc.), you get an email to your
+  own inbox saying so — the rest of the fetch still runs normally.
 
 ## One-time setup
 
@@ -52,6 +58,51 @@ Note: Vercel's Hobby (free) plan may execute cron jobs within roughly an
 hour of the scheduled time rather than to-the-minute. If you need exact
 timing, a Pro plan removes that slack.
 
+## Gmail setup (for the LinkedIn email check)
+
+This is a separate setup from JSearch/RapidAPI — it lets the app read
+LinkedIn job-alert emails from your inbox and email you if that step fails.
+It's optional; without it, the app still runs on JSearch alone.
+
+1. **Create a Google Cloud project**: go to
+   [console.cloud.google.com](https://console.cloud.google.com), create a
+   new project (or reuse one).
+
+2. **Enable the Gmail API**: in that project, go to APIs & Services →
+   Library → search "Gmail API" → Enable.
+
+3. **Configure the OAuth consent screen**: APIs & Services → OAuth consent
+   screen → User Type **External** → fill in an app name and your email →
+   under "Test users" add your own Gmail address (this keeps the app in
+   testing mode, which is fine since only you will ever use it).
+
+4. **Create an OAuth Client ID**: APIs & Services → Credentials → Create
+   Credentials → OAuth client ID → Application type **Web application** →
+   under "Authorized redirect URIs" add:
+   `https://<your-deployment>/api/auth/gmail/callback`
+   Save, then copy the **Client ID** and **Client Secret** it shows you.
+
+5. **Add env vars in Vercel**: `GMAIL_CLIENT_ID` and `GMAIL_CLIENT_SECRET`
+   from step 4. Deploy (or redeploy) so they take effect.
+
+6. **Get a refresh token**: visit `https://<your-deployment>/api/auth/gmail/start`
+   in your browser, sign in with the Gmail account whose LinkedIn emails you
+   want read, and approve access. You'll land on a plain text page showing a
+   refresh token — copy it.
+
+7. **Add the refresh token**: set `GMAIL_REFRESH_TOKEN` in Vercel to the
+   value from step 6, then redeploy one more time.
+
+8. **Verify**: manually trigger `/api/cron/fetch-jobs` again (per step 6 of
+   the main setup) — the response now includes `linkedinEmailCount` and
+   `linkedinEmailsScanned` fields.
+
+If you ever see "No refresh_token in the response" at the callback URL, it
+means this Google account already granted access before (Google only issues
+a refresh token on the *first* consent). Go to
+[myaccount.google.com/permissions](https://myaccount.google.com/permissions),
+remove the app's access, and repeat step 6.
+
 ## Local development
 
 ```bash
@@ -81,6 +132,18 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
   for US-based postings, CAD for Canadian ones) — the $150k threshold is a
   flat number, not currency-converted.
 
+## How the LinkedIn email parsing works (`lib/linkedinEmail.js`)
+
+- Searches Gmail for `from:(jobalerts-noreply@linkedin.com OR
+  jobs-noreply@linkedin.com) newer_than:2d` (LinkedIn's own job-alert and
+  job-recommendation senders, last 48 hours).
+- LinkedIn's digest emails list jobs as repeating text blocks ending in a
+  "View job: `<url>`" line; the parser walks backward from each of those to
+  pull out title/company/location, skipping known metadata lines ("N
+  connections", "This company is actively hiring", etc).
+- Same remote-or-GTA qualifying filter as JSearch results, merged into the
+  same list (deduped against JSearch by company+title).
+
 ## Known limitations
 
 - JSearch's free "Basic" plan on RapidAPI is hard-capped at **200
@@ -92,3 +155,12 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
 - The Discarded tab only shows jobs still present in the current 7-day fetch
   window — a discarded job that ages out of that window disappears from the
   tab, but its ID stays permanently blocked from ever reappearing.
+- LinkedIn's plain-text emails don't reliably expose employment type
+  (contract vs. permanent), so contract exclusion for email-sourced jobs
+  only catches "Contract"/"Temp" appearing literally in the job title —
+  weaker than the JSearch-sourced filter, which reads the API's actual
+  employment-type field.
+- LinkedIn's email format isn't a public API — if they change their
+  template, the parser can silently start missing jobs. Watch the
+  `linkedinEmailCount` field in a manual `/api/cron/fetch-jobs` response if
+  results seem to drop off.
