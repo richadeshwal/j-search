@@ -5,7 +5,7 @@ and **PM for AI** openings from LinkedIn, Indeed, Glassdoor, and ZipRecruiter
 (via the [JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) API,
 which aggregates Google for Jobs).
 
-- Refreshes automatically every day at **3:00 PM ET** via Vercel Cron.
+- Refreshes automatically every day at **3:00 PM ET and 4:00 PM ET** via Vercel Cron.
 - Only keeps jobs posted in the **last 7 days**.
 - Only keeps jobs that are **remote**, or **located in the Greater Toronto Area**
   (JSearch has no reliable "hybrid" flag, so any GTA-located result is kept —
@@ -38,9 +38,10 @@ which aggregates Google for Jobs).
      automatically sends this as a bearer token when it invokes the cron job,
      and the fetch route rejects requests without it.
 
-5. **Deploy.** The cron schedule is already defined in `vercel.json` (two
-   entries so the job fires at 3:00 PM Eastern year-round, accounting for the
-   DST switch between EST/EDT — Vercel Cron itself only understands UTC).
+5. **Deploy.** The cron schedule is already defined in `vercel.json` — four
+   entries total (two per run time) so the fetch fires at both 3:00 PM and
+   4:00 PM Eastern year-round, accounting for the DST switch between
+   EST/EDT (Vercel Cron itself only understands UTC, hence the pairs).
 
 6. **Trigger the first fetch manually** rather than waiting for 3 PM: visit
    `https://<your-deployment>/api/cron/fetch-jobs` with the `Authorization:
