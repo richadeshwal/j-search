@@ -19,11 +19,12 @@ export async function GET(request) {
   }
 
   try {
-    const { jobs, errors } = await fetchAllJobs(process.env.RAPIDAPI_KEY);
+    const { jobs, errors, rawCounts } = await fetchAllJobs(process.env.RAPIDAPI_KEY);
     await saveFetchResult(jobs, errors);
     return Response.json({
       ok: true,
       count: jobs.length,
+      rawCounts,
       errors,
       generatedAt: new Date().toISOString(),
     });
