@@ -77,9 +77,10 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
 
 ## Known limitations
 
-- JSearch's free tier has a monthly request quota; this app uses 8 requests/day
-  (a general pass + a Toronto-anchored pass per job title) ≈ 240/month —
-  check your plan's monthly limit, and if you add more titles or `num_pages`,
+- JSearch's free tier has a monthly request quota; this app now runs twice
+  daily (3 PM and 4 PM ET), 8 requests per run (a general pass + a
+  Toronto-anchored pass per job title) ≈ 480/month — check your Basic plan's
+  monthly limit, and if you add more titles, run times, or `num_pages`,
   watch your quota.
 - "Hybrid" detection is a heuristic (keyword match in the job description),
   since the API doesn't expose a clean remote/hybrid/onsite field.
