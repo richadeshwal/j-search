@@ -37,7 +37,7 @@ export default function JobCard({ job, mode, onDiscard, onApply, onUndoApply, on
         {job.isRemote && <span className="badge good">Remote</span>}
         {job.isGta && <span className="badge">GTA</span>}
         {job.isLikelyHybrid && <span className="badge">Likely hybrid</span>}
-        {job.meetsSalaryTarget && <span className="badge good">$160k+</span>}
+        {job.meetsSalaryTarget && <span className="badge good">$150k+</span>}
         {salary && <span className="badge warn">{salary}</span>}
         {job.employmentType && <span className="badge subtle">{job.employmentType}</span>}
         <span className="badge subtle">{job.source}</span>

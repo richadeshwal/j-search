@@ -10,7 +10,7 @@ which aggregates Google for Jobs).
 - Only keeps jobs that are **remote**, or **located in the Greater Toronto Area**
   (JSearch has no reliable "hybrid" flag, so any GTA-located result is kept —
   the "Likely hybrid" badge is a best-effort guess from the listing text).
-- Ranks results, giving priority to **remote** jobs and jobs paying **$160k+**.
+- Ranks results, giving priority to **remote** jobs and jobs paying **$150k+**.
 - Three working tabs: **New Jobs**, **Toronto / GTA**, **Applied** (plus a
   **Discarded** tab as an undo safety net).
 - **Discard** hides a job permanently — it's stored server-side (Vercel KV),
@@ -74,11 +74,11 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
   every query is now Toronto-anchored, results skew almost entirely GTA;
   remote-but-not-Toronto jobs only show up if one incidentally surfaces from
   that search.
-- **Score** (used to sort the New Jobs tab): +2 remote, +2 salary ≥ $160,000/yr
+- **Score** (used to sort the New Jobs tab): +2 remote, +2 salary ≥ $150,000/yr
   (hourly/monthly/weekly pay is annualized for comparison), +1 GTA job whose
   description mentions "hybrid".
 - Salary currency is whatever JSearch reports for that listing (usually USD
-  for US-based postings, CAD for Canadian ones) — the $160k threshold is a
+  for US-based postings, CAD for Canadian ones) — the $150k threshold is a
   flat number, not currency-converted.
 
 ## Known limitations
