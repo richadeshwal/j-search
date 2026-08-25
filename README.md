@@ -5,7 +5,7 @@ and **PM for AI** openings from LinkedIn, Indeed, Glassdoor, and ZipRecruiter
 (via the [JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) API,
 which aggregates Google for Jobs).
 
-- Refreshes automatically every day at **3:00 PM ET** via Vercel Cron.
+- Refreshes automatically every day at **3:00 AM ET** via Vercel Cron.
 - Only keeps jobs posted in the **last 7 days**.
 - Only keeps jobs that are **remote**, or **located in the Greater Toronto Area**
   (JSearch has no reliable "hybrid" flag, so any GTA-located result is kept —
@@ -39,10 +39,10 @@ which aggregates Google for Jobs).
      and the fetch route rejects requests without it.
 
 5. **Deploy.** The cron schedule is already defined in `vercel.json` (two
-   entries so the job fires at 3:00 PM Eastern year-round, accounting for the
+   entries so the job fires at 3:00 AM Eastern year-round, accounting for the
    DST switch between EST/EDT — Vercel Cron itself only understands UTC).
 
-6. **Trigger the first fetch manually** rather than waiting for 3 PM: visit
+6. **Trigger the first fetch manually** rather than waiting for 3 AM: visit
    `https://<your-deployment>/api/cron/fetch-jobs` with the `Authorization:
    Bearer <CRON_SECRET>` header (e.g. `curl -H "Authorization: Bearer
    <secret>" https://.../api/cron/fetch-jobs`), or temporarily unset
@@ -85,7 +85,7 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
 
 - JSearch's free "Basic" plan on RapidAPI is hard-capped at **200
   requests/month**. This app runs 4 requests/day (one per job title), once
-  daily at 3 PM ET, ≈ 120/month — safely under the cap with room for
+  daily at 3 AM ET, ≈ 120/month — safely under the cap with room for
   manual test triggers.
 - "Hybrid" detection is a heuristic (keyword match in the job description),
   since the API doesn't expose a clean remote/hybrid/onsite field.
