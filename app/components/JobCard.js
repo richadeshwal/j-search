@@ -40,7 +40,11 @@ export default function JobCard({ job, mode, onDiscard, onApply, onUndoApply, on
         {job.meetsSalaryTarget && <span className="badge good">$150k+</span>}
         {salary && <span className="badge warn">{salary}</span>}
         {job.employmentType && <span className="badge subtle">{job.employmentType}</span>}
-        <span className="badge subtle">{job.source}</span>
+        {job.isFromEmail ? (
+          <span className="badge email">LinkedinEmail</span>
+        ) : (
+          <span className="badge subtle">{job.source}</span>
+        )}
       </div>
 
       <div className="job-footer">
