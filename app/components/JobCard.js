@@ -21,7 +21,7 @@ function timeAgo(iso) {
   return `${days}d ago`;
 }
 
-export default function JobCard({ job, mode, onDiscard, onApply, onUndoApply, onUndoDiscard }) {
+export default function JobCard({ job, mode, onDiscard, onApply, onUndoApply, onUndoDiscard, onTailor }) {
   const salary = formatSalary(job);
 
   return (
@@ -57,6 +57,7 @@ export default function JobCard({ job, mode, onDiscard, onApply, onUndoApply, on
           )}
           {mode === "active" && (
             <>
+              <button className="btn" onClick={() => onTailor(job)}>Tailor Resume</button>
               <button className="btn" onClick={() => onApply(job)}>Mark applied</button>
               <button className="btn discard" onClick={() => onDiscard(job)}>Discard</button>
             </>

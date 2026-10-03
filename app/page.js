@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import JobCard from "./components/JobCard";
+import TailorModal from "./components/TailorModal";
 
 const TABS = [
   { key: "newJobs", label: "New Jobs", mode: "active" },
@@ -14,6 +15,7 @@ export default function Home() {
   const [state, setState] = useState(null);
   const [tab, setTab] = useState("newJobs");
   const [loading, setLoading] = useState(true);
+  const [tailoringJob, setTailoringJob] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,6 +92,7 @@ export default function Home() {
               : "No data yet — waiting on the first scheduled fetch."}
           </span>
           <button className="refresh-btn" onClick={load}>Refresh</button>
+          <a className="resume-link" href="/resume">Resume</a>
         </div>
       </header>
 
@@ -124,9 +127,14 @@ export default function Home() {
             onApply={handleApply}
             onUndoApply={handleUndoApply}
             onUndoDiscard={handleUndoDiscard}
+            onTailor={setTailoringJob}
           />
         ))}
       </div>
+
+      {tailoringJob && (
+        <TailorModal job={tailoringJob} onClose={() => setTailoringJob(null)} />
+      )}
     </div>
   );
 }

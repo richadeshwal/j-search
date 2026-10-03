@@ -23,6 +23,11 @@ Jobs), and your own Gmail — parsing LinkedIn's job-alert emails from the last
   hours** and folds any matching jobs into the same list. If that step
   fails (expired token, Gmail API error, etc.), you get an email to your
   own inbox saying so — the rest of the fetch still runs normally.
+- **Tailor Resume** button on each job: paste your full resume once at
+  `/resume`, then click the button on any job to get a ~2-page version
+  reordered/reworded toward that posting's keywords — Claude is explicitly
+  instructed never to invent experience, only to reorder, reword, trim, and
+  surface existing content. Copy the result or download it as a `.docx`.
 
 ## One-time setup
 
@@ -103,6 +108,19 @@ a refresh token on the *first* consent). Go to
 [myaccount.google.com/permissions](https://myaccount.google.com/permissions),
 remove the app's access, and repeat step 6.
 
+## Resume tailoring setup
+
+1. Get an API key: [console.anthropic.com](https://console.anthropic.com) →
+   API Keys → Create Key.
+2. Add `ANTHROPIC_API_KEY` in Vercel's Environment Variables, redeploy.
+3. Visit `/resume` on your deployment and paste your full resume. Save.
+4. Click **Tailor Resume** on any job in the New Jobs or Toronto/GTA tabs.
+
+This is separate billing from a Claude.ai subscription — it's the deployed
+app calling the Anthropic API directly, billed per request against your API
+key. Resume tailoring requests are small (a few thousand tokens each), so
+cost per use is minor, but it's metered, unlike a flat subscription.
+
 ## Local development
 
 ```bash
@@ -164,3 +182,8 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
   template, the parser can silently start missing jobs. Watch the
   `linkedinEmailCount` field in a manual `/api/cron/fetch-jobs` response if
   results seem to drop off.
+- Resume tailoring only has a job's full description for JSearch-sourced
+  jobs — LinkedIn-email-sourced jobs only carry title/company/location, so
+  tailoring for those leans on the title alone and will be less targeted.
+  There's one resume stored per deployment (no multi-user support) — fine
+  for personal use, not for sharing this instance with anyone else.
