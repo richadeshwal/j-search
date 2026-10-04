@@ -129,6 +129,16 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
   every query is now Toronto-anchored, results skew almost entirely GTA;
   remote-but-not-Toronto jobs only show up if one incidentally surfaces from
   that search.
+- **Title relevance gate**: the job title itself must contain "Product
+  Manager", "Project Manager", "Program Manager", "Product Owner", "TPM",
+  or "PM" (`isRelevantTitle` in `lib/jsearch.js`, shared with the LinkedIn
+  email parser). Both JSearch's semantic search and the user's own LinkedIn
+  alert searches otherwise surface adjacent-but-different roles — "Senior
+  Manager, AI Enablement," "Data Science Manager," "Value Stream Owner,
+  Technology" — that have nothing to do with product/project management.
+  Senior IC/Director titles that say "Product Management" without "Manager"
+  (e.g. "Director, AI Strategy and Product Management") are currently
+  excluded too — tune the regex if you want those included.
 - **Score** (used to sort the New Jobs tab): +2 remote, +2 salary ≥ $150,000/yr
   (hourly/monthly/weekly pay is annualized for comparison), +1 GTA job whose
   description mentions "hybrid".
