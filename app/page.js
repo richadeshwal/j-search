@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import JobCard from "./components/JobCard";
-import TailorModal from "./components/TailorModal";
 
 const TABS = [
   { key: "newJobs", label: "New Jobs", mode: "active" },
   { key: "gtaJobs", label: "Toronto / GTA", mode: "active" },
+  { key: "shortlistedJobs", label: "Shortlisted", mode: "active" },
   { key: "appliedJobs", label: "Applied", mode: "applied" },
   { key: "discardedJobs", label: "Discarded", mode: "discarded" },
 ];
@@ -15,7 +15,6 @@ export default function Home() {
   const [state, setState] = useState(null);
   const [tab, setTab] = useState("newJobs");
   const [loading, setLoading] = useState(true);
-  const [tailoringJob, setTailoringJob] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -36,6 +35,7 @@ export default function Home() {
       ...s,
       newJobs: removeFromView(s.newJobs, job.id),
       gtaJobs: removeFromView(s.gtaJobs, job.id),
+      shortlistedJobs: removeFromView(s.shortlistedJobs, job.id),
       discardedJobs: [job, ...s.discardedJobs],
     }));
     await fetch(`/api/jobs/${encodeURIComponent(job.id)}/discard`, { method: "POST" });
@@ -47,6 +47,7 @@ export default function Home() {
       discardedJobs: removeFromView(s.discardedJobs, job.id),
       newJobs: [job, ...s.newJobs],
       gtaJobs: job.isGta ? [job, ...s.gtaJobs] : s.gtaJobs,
+      shortlistedJobs: job.isShortlisted ? [job, ...s.shortlistedJobs] : s.shortlistedJobs,
     }));
     await fetch(`/api/jobs/${encodeURIComponent(job.id)}/discard`, { method: "DELETE" });
   };
@@ -57,6 +58,7 @@ export default function Home() {
       ...s,
       newJobs: removeFromView(s.newJobs, job.id),
       gtaJobs: removeFromView(s.gtaJobs, job.id),
+      shortlistedJobs: removeFromView(s.shortlistedJobs, job.id),
       appliedJobs: [snapshot, ...s.appliedJobs],
     }));
     await fetch(`/api/jobs/${encodeURIComponent(job.id)}/apply`, {
@@ -72,8 +74,28 @@ export default function Home() {
       appliedJobs: removeFromView(s.appliedJobs, job.id),
       newJobs: [job, ...s.newJobs],
       gtaJobs: job.isGta ? [job, ...s.gtaJobs] : s.gtaJobs,
+      shortlistedJobs: job.isShortlisted ? [job, ...s.shortlistedJobs] : s.shortlistedJobs,
     }));
     await fetch(`/api/jobs/${encodeURIComponent(job.id)}/apply`, { method: "DELETE" });
+  };
+
+  const handleToggleShortlist = async (job) => {
+    const shortlisted = !job.isShortlisted;
+    const toggleIn = (list) =>
+      list.map((j) => (j.id === job.id ? { ...j, isShortlisted: shortlisted } : j));
+
+    setState((s) => ({
+      ...s,
+      newJobs: toggleIn(s.newJobs),
+      gtaJobs: toggleIn(s.gtaJobs),
+      shortlistedJobs: shortlisted
+        ? [{ ...job, isShortlisted: true }, ...removeFromView(s.shortlistedJobs, job.id)]
+        : removeFromView(s.shortlistedJobs, job.id),
+    }));
+
+    await fetch(`/api/jobs/${encodeURIComponent(job.id)}/shortlist`, {
+      method: shortlisted ? "POST" : "DELETE",
+    });
   };
 
   const activeTab = TABS.find((t) => t.key === tab);
@@ -92,7 +114,6 @@ export default function Home() {
               : "No data yet — waiting on the first scheduled fetch."}
           </span>
           <button className="refresh-btn" onClick={load}>Refresh</button>
-          <a className="resume-link" href="/resume">Resume</a>
         </div>
       </header>
 
@@ -127,14 +148,10 @@ export default function Home() {
             onApply={handleApply}
             onUndoApply={handleUndoApply}
             onUndoDiscard={handleUndoDiscard}
-            onTailor={setTailoringJob}
+            onToggleShortlist={handleToggleShortlist}
           />
         ))}
       </div>
-
-      {tailoringJob && (
-        <TailorModal job={tailoringJob} onClose={() => setTailoringJob(null)} />
-      )}
     </div>
   );
 }

@@ -13,21 +13,20 @@ Jobs), and your own Gmail — parsing LinkedIn's job-alert emails from the last
   (JSearch has no reliable "hybrid" flag, so any GTA-located result is kept —
   the "Likely hybrid" badge is a best-effort guess from the listing text).
 - Ranks results, giving priority to **remote** jobs and jobs paying **$150k+**.
-- Three working tabs: **New Jobs**, **Toronto / GTA**, **Applied** (plus a
-  **Discarded** tab as an undo safety net).
+- Three working tabs: **New Jobs**, **Toronto / GTA**, **Applied** (plus
+  **Shortlisted** and **Discarded** as additional views).
 - **Discard** hides a job permanently — it's stored server-side (Vercel KV),
   so it never comes back even after the next day's refresh, on any device.
 - **Mark applied** moves a job to the Applied tab and snapshots it, so it
   stays in your applied history even after it ages out of the 7-day window.
+- **Shortlist** (☆ button) flags a job you're planning to apply to without
+  removing it from New/GTA — it also shows up in the Shortlisted tab. Resume
+  tailoring for shortlisted jobs happens in a Claude chat (paste your resume
+  + the job details there) rather than inside this app.
 - Also scans your Gmail for **LinkedIn job-alert emails from the last 48
   hours** and folds any matching jobs into the same list. If that step
   fails (expired token, Gmail API error, etc.), you get an email to your
   own inbox saying so — the rest of the fetch still runs normally.
-- **Tailor Resume** button on each job: paste your full resume once at
-  `/resume`, then click the button on any job to get a ~2-page version
-  reordered/reworded toward that posting's keywords — Claude is explicitly
-  instructed never to invent experience, only to reorder, reword, trim, and
-  surface existing content. Copy the result or download it as a `.docx`.
 
 ## One-time setup
 
@@ -108,19 +107,6 @@ a refresh token on the *first* consent). Go to
 [myaccount.google.com/permissions](https://myaccount.google.com/permissions),
 remove the app's access, and repeat step 6.
 
-## Resume tailoring setup
-
-1. Get an API key: [console.anthropic.com](https://console.anthropic.com) →
-   API Keys → Create Key.
-2. Add `ANTHROPIC_API_KEY` in Vercel's Environment Variables, redeploy.
-3. Visit `/resume` on your deployment and paste your full resume. Save.
-4. Click **Tailor Resume** on any job in the New Jobs or Toronto/GTA tabs.
-
-This is separate billing from a Claude.ai subscription — it's the deployed
-app calling the Anthropic API directly, billed per request against your API
-key. Resume tailoring requests are small (a few thousand tokens each), so
-cost per use is minor, but it's metered, unlike a flat subscription.
-
 ## Local development
 
 ```bash
@@ -182,8 +168,5 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
   template, the parser can silently start missing jobs. Watch the
   `linkedinEmailCount` field in a manual `/api/cron/fetch-jobs` response if
   results seem to drop off.
-- Resume tailoring only has a job's full description for JSearch-sourced
-  jobs — LinkedIn-email-sourced jobs only carry title/company/location, so
-  tailoring for those leans on the title alone and will be less targeted.
-  There's one resume stored per deployment (no multi-user support) — fine
-  for personal use, not for sharing this instance with anyone else.
+- The Shortlisted tab, like Discarded, only shows jobs still present in the
+  current 7-day fetch window.
