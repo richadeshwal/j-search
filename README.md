@@ -1,11 +1,11 @@
 # J-Search
 
 Tracks new **AI Product Manager**, **AI Project Manager**, **ML Product Manager**,
-and **PM for AI** openings from two sources: the
+and **PM for AI** openings from three sources: the
 [JSearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch) API (which
 aggregates LinkedIn, Indeed, Glassdoor, ZipRecruiter, and more via Google for
-Jobs), and your own Gmail — parsing LinkedIn's job-alert emails from the last
-48 hours directly.
+Jobs), your own Gmail — parsing LinkedIn's job-alert emails from the last
+48 hours directly — and Manulife's own careers page.
 
 - Refreshes automatically every day at **3:00 AM ET** via Vercel Cron.
 - Only keeps jobs posted in the **last 7 days**.
@@ -28,6 +28,10 @@ Jobs), and your own Gmail — parsing LinkedIn's job-alert emails from the last
   the employer name/description, since JSearch has no industry field
   (`classifyIndustry` in `lib/jsearch.js`); best-effort, not a verified
   classification.
+- Also scans **Manulife's own careers page** (Workday-hosted) for any
+  Product/Project/Program Manager opening — unlike every other source in
+  this app, Manulife results **skip the AI-relevance gate** by design
+  (per-employer exception; still require remote-or-GTA + a PM title).
 - Also scans your Gmail for **LinkedIn job-alert emails from the last 48
   hours** and folds any matching jobs into the same list. If that step
   fails (expired token, Gmail API error, etc.), you get an email to your
@@ -176,6 +180,25 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
   connections", "This company is actively hiring", etc).
 - Same remote-or-GTA qualifying filter as JSearch results, merged into the
   same list (deduped against JSearch by company+title).
+
+## How the Manulife careers scan works (`lib/manulifeCareers.js`)
+
+- Calls Manulife's Workday-hosted career site's job-search JSON endpoint
+  directly (`manulife.wd3.myworkdayjobs.com`) with `searchText: "Product
+  Manager"` — this is an undocumented-but-widely-used API pattern common to
+  Workday-hosted career sites, not an official public API. If Manulife
+  changes career platforms or Workday changes this endpoint's shape, this
+  silently stops returning results (check `manulifeCount` in a manual
+  `/api/cron/fetch-jobs` response).
+- Workday's list view only returns a relative posted-date string ("Posted
+  3 Days Ago", "Posted 30+ Days Ago") and no job description — so the
+  7-day window is parsed from that string (anything unparseable or "30+"
+  is treated as too old, not guessed at), and there's no description to
+  check for AI-relevance, employment type, or hybrid detection.
+- **Intentionally skips the AI-relevance gate** — every PM/Project/Program
+  Manager-titled opening at Manulife that's remote-or-GTA passes, AI-themed
+  or not. This is a deliberate per-employer exception; every other source
+  in this app still requires AI/ML relevance.
 
 ## Known limitations
 

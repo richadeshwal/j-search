@@ -1,5 +1,6 @@
 const { fetchAllJobs } = require("../../../../lib/jsearch");
 const { fetchLinkedInEmailJobs } = require("../../../../lib/linkedinEmail");
+const { fetchManulifeJobs } = require("../../../../lib/manulifeCareers");
 const { sendSelfAlert } = require("../../../../lib/gmailAlert");
 const { saveFetchResult } = require("../../../../lib/store");
 
@@ -15,10 +16,18 @@ function isAuthorized(request) {
   return auth === `Bearer ${secret}`;
 }
 
-function mergeJobs(jsearchJobs, emailJobs) {
-  const seen = new Set(jsearchJobs.map((j) => `${j.company}|${j.title}`.toLowerCase()));
-  const uniqueEmailJobs = emailJobs.filter((j) => !seen.has(`${j.company}|${j.title}`.toLowerCase()));
-  return [...jsearchJobs, ...uniqueEmailJobs];
+function mergeJobs(...lists) {
+  const seen = new Set();
+  const merged = [];
+  for (const list of lists) {
+    for (const job of list) {
+      const key = `${job.company}|${job.title}`.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(job);
+    }
+  }
+  return merged;
 }
 
 export async function GET(request) {
@@ -30,6 +39,7 @@ export async function GET(request) {
   let jsearchJobs = [];
   let rawCounts = {};
   let emailResult = { jobs: [], rawCount: 0, emailCount: 0 };
+  let manulifeResult = { jobs: [], rawCount: 0 };
 
   try {
     const result = await fetchAllJobs(process.env.RAPIDAPI_KEY);
@@ -58,7 +68,13 @@ export async function GET(request) {
     }
   }
 
-  const jobs = mergeJobs(jsearchJobs, emailResult.jobs);
+  try {
+    manulifeResult = await fetchManulifeJobs();
+  } catch (err) {
+    errors.push(`Manulife careers scan: ${String(err.message || err)}`);
+  }
+
+  const jobs = mergeJobs(jsearchJobs, emailResult.jobs, manulifeResult.jobs);
   await saveFetchResult(jobs, errors);
 
   return Response.json({
@@ -67,6 +83,8 @@ export async function GET(request) {
     jsearchCount: jsearchJobs.length,
     linkedinEmailCount: emailResult.jobs.length,
     linkedinEmailsScanned: emailResult.emailCount,
+    manulifeCount: manulifeResult.jobs.length,
+    manulifeRawCount: manulifeResult.rawCount,
     rawCounts,
     errors,
     generatedAt: new Date().toISOString(),
