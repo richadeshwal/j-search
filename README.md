@@ -139,12 +139,26 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
   Senior IC/Director titles that say "Product Management" without "Manager"
   (e.g. "Director, AI Strategy and Product Management") are currently
   excluded too — tune the regex if you want those included.
+- **AI/ML relevance gate**: on top of the title gate, the job must also be
+  genuinely AI/ML-related — title or description (JSearch jobs only; email
+  jobs have no description) must contain "AI", "ML", "machine learning",
+  "LLM"/"large language model", "generative AI"/"genAI", "agentic", "NLP",
+  "deep learning", or "neural network" (`isAiRelated`). A generic PM title
+  with no AI signal in the title (and no description to check, as with
+  email-sourced jobs) is excluded even if the company is AI-focused — e.g.
+  a product literally branded "Falcon Writer" with no "AI"/"ML" keyword in
+  its title would be missed.
+- **Salary floor**: a job with a *confirmed* salary under $160,000/yr is
+  excluded outright (`SALARY_FLOOR` in `lib/jsearch.js`) — not just
+  deprioritized. A job with no listed salary still passes (most postings
+  don't list one; excluding all of those too would gut the list almost
+  entirely).
 - **Score** (used to sort the New Jobs tab): +2 remote, +2 salary ≥ $150,000/yr
   (hourly/monthly/weekly pay is annualized for comparison), +1 GTA job whose
   description mentions "hybrid".
 - Salary currency is whatever JSearch reports for that listing (usually USD
-  for US-based postings, CAD for Canadian ones) — the $150k threshold is a
-  flat number, not currency-converted.
+  for US-based postings, CAD for Canadian ones) — both the $150k sort
+  threshold and the $160k floor are flat numbers, not currency-converted.
 
 ## How the LinkedIn email parsing works (`lib/linkedinEmail.js`)
 
