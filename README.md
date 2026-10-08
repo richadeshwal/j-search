@@ -157,6 +157,18 @@ npm run dev            # runs the app at localhost:3000 (KV env vars required fo
   email-sourced jobs) is excluded even if the company is AI-focused — e.g.
   a product literally branded "Falcon Writer" with no "AI"/"ML" keyword in
   its title would be missed.
+- **Entry-level exclusion**: a posting whose title or description says
+  "entry level," "junior," "new grad(uate)," or "internship" is excluded
+  outright (`isEntryLevel` in `lib/jsearch.js`, shared with the LinkedIn
+  email parser and the Manulife careers scan, both title-only since neither
+  has a description to check).
+- **Freshness safety net**: JSearch's `date_posted=week` parameter isn't
+  reliably honored by every underlying publisher — a stale listing (e.g.
+  from "Ai-Search.io") has been seen slipping through months after its
+  real posting date. `normalizeJob` now independently re-checks
+  `job_posted_at_datetime_utc` against a 7-day cutoff itself and drops
+  anything older, rather than trusting the request parameter alone. A job
+  with no timestamp at all still passes (can't confirm either way).
 - **Salary floor**: a job with a *confirmed* salary under $160,000/yr is
   excluded outright (`SALARY_FLOOR` in `lib/jsearch.js`) — not just
   deprioritized. A job with no listed salary still passes (most postings
