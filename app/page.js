@@ -45,7 +45,7 @@ export default function Home() {
     setState((s) => ({
       ...s,
       discardedJobs: removeFromView(s.discardedJobs, job.id),
-      newJobs: [job, ...s.newJobs],
+      newJobs: job.isGta ? s.newJobs : [job, ...s.newJobs],
       gtaJobs: job.isGta ? [job, ...s.gtaJobs] : s.gtaJobs,
       shortlistedJobs: job.isShortlisted ? [job, ...s.shortlistedJobs] : s.shortlistedJobs,
     }));
@@ -72,7 +72,7 @@ export default function Home() {
     setState((s) => ({
       ...s,
       appliedJobs: removeFromView(s.appliedJobs, job.id),
-      newJobs: [job, ...s.newJobs],
+      newJobs: job.isGta ? s.newJobs : [job, ...s.newJobs],
       gtaJobs: job.isGta ? [job, ...s.gtaJobs] : s.gtaJobs,
       shortlistedJobs: job.isShortlisted ? [job, ...s.shortlistedJobs] : s.shortlistedJobs,
     }));
