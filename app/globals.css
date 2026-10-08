@@ -111,7 +111,30 @@ button.refresh-btn:hover {
 .job-list {
   display: flex;
   flex-direction: column;
+  gap: 24px;
+}
+
+.industry-group {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+}
+
+.industry-heading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.industry-count {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .job-card {

@@ -23,6 +23,11 @@ Jobs), and your own Gmail — parsing LinkedIn's job-alert emails from the last
   removing it from New/GTA — it also shows up in the Shortlisted tab. Resume
   tailoring for shortlisted jobs happens in a Claude chat (paste your resume
   + the job details there) rather than inside this app.
+- Every tab groups jobs under an **industry heading** (Financial Services,
+  Healthcare & Life Sciences, Technology / Software, etc.) — inferred from
+  the employer name/description, since JSearch has no industry field
+  (`classifyIndustry` in `lib/jsearch.js`); best-effort, not a verified
+  classification.
 - Also scans your Gmail for **LinkedIn job-alert emails from the last 48
   hours** and folds any matching jobs into the same list. If that step
   fails (expired token, Gmail API error, etc.), you get an email to your

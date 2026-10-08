@@ -101,6 +101,18 @@ export default function Home() {
   const activeTab = TABS.find((t) => t.key === tab);
   const list = state ? state[tab] || [] : [];
 
+  const groupedByIndustry = [];
+  const groupIndex = new Map();
+  for (const job of list) {
+    const industry = job.industry || "Other";
+    if (!groupIndex.has(industry)) {
+      groupIndex.set(industry, groupedByIndustry.length);
+      groupedByIndustry.push({ industry, jobs: [] });
+    }
+    groupedByIndustry[groupIndex.get(industry)].jobs.push(job);
+  }
+  groupedByIndustry.sort((a, b) => b.jobs.length - a.jobs.length);
+
   return (
     <div className="container">
       <header className="app-header">
@@ -139,17 +151,22 @@ export default function Home() {
         {list.length === 0 && !loading && (
           <p className="empty-state">Nothing here yet.</p>
         )}
-        {list.map((job) => (
-          <JobCard
-            key={job.id}
-            job={job}
-            mode={activeTab.mode}
-            onDiscard={handleDiscard}
-            onApply={handleApply}
-            onUndoApply={handleUndoApply}
-            onUndoDiscard={handleUndoDiscard}
-            onToggleShortlist={handleToggleShortlist}
-          />
+        {groupedByIndustry.map(({ industry, jobs }) => (
+          <div key={industry} className="industry-group">
+            <h2 className="industry-heading">{industry} <span className="industry-count">({jobs.length})</span></h2>
+            {jobs.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                mode={activeTab.mode}
+                onDiscard={handleDiscard}
+                onApply={handleApply}
+                onUndoApply={handleUndoApply}
+                onUndoDiscard={handleUndoDiscard}
+                onToggleShortlist={handleToggleShortlist}
+              />
+            ))}
+          </div>
         ))}
       </div>
     </div>
